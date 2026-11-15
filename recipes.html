@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f6f8" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recipes">
+<title>Recipes</title>
+<style>
+:root {
+  --bg: #f6f6f8; --card: #ffffff; --card2: #efeff3; --text: #18181b; --dim: #6b6b76; --faint: #a3a3ad;
+  --line: #e4e4ea; --accent: #e8743b; --accent-ink: #fff; --danger: #e5484d;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121214; --card: #1e1e23; --card2: #26262c; --text: #f4f4f5; --dim: #9696a0; --faint: #5c5c66;
+    --line: #2c2c33; --accent: #ff8a4c; --accent-ink: #1a0d05; --danger: #ff5c5f; --shadow: none; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; padding: env(safe-area-inset-top) 16px calc(40px + env(safe-area-inset-bottom)); }
+main { max-width: 760px; margin: 0 auto; }
+header { padding: 28px 0 14px; display: flex; align-items: center; gap: 12px; }
+header h1 { flex: 1; margin: 0; font-size: 34px; letter-spacing: -.02em; min-width: 0; }
+button { font: inherit; cursor: pointer; }
+.btn { border: 0; border-radius: 12px; padding: 11px 18px; font-weight: 650; background: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.quiet { background: var(--card2); color: var(--text); }
+.btn.danger { background: transparent; color: var(--danger); padding-left: 6px; padding-right: 6px; }
+.back { border: 0; background: none; color: var(--accent); font-weight: 600; padding: 8px 0; font-size: 16px; }
+.search { width: 100%; font: inherit; color: var(--text); background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 11px 14px; outline: none; margin-bottom: 16px; }
+.search:focus { border-color: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow);
+  padding: 0; text-align: left; color: inherit; display: flex; flex-direction: column; }
+.tile .ph { aspect-ratio: 4 / 3; background: var(--card2) center / cover no-repeat; display: grid; place-items: center; color: var(--faint); }
+.tile .t { padding: 10px 12px 12px; font-weight: 650; line-height: 1.3; }
+.tile:hover { border-color: var(--accent); }
+.empty { text-align: center; color: var(--dim); padding: 60px 12px; }
+.empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 4px; }
+.hero { width: 100%; max-height: 60vh; object-fit: cover; border-radius: 18px; display: block; background: var(--card2); }
+.recipe h2 { font-size: 30px; margin: 18px 0 6px; letter-spacing: -.01em; }
+.recipe .meta { color: var(--faint); font-size: 14px; margin-bottom: 14px; }
+.recipe .body { white-space: pre-wrap; word-break: break-word; font-size: 17px; line-height: 1.6; }
+.actions { display: flex; gap: 8px; margin-top: 22px; align-items: center; }
+.actions .grow { flex: 1; }
+label.lab { display: block; font-weight: 650; font-size: 14px; color: var(--dim); margin: 16px 0 6px; }
+.field { width: 100%; font: inherit; color: var(--text); background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; outline: none; }
+.field:focus { border-color: var(--accent); }
+textarea.field { min-height: 320px; resize: vertical; line-height: 1.55; }
+.photo { border: 2px dashed var(--line); border-radius: 16px; background: var(--card); min-height: 150px; display: grid; place-items: center;
+  color: var(--dim); text-align: center; padding: 14px; cursor: pointer; position: relative; overflow: hidden; }
+.photo.over { border-color: var(--accent); }
+.photo img { max-width: 100%; max-height: 340px; border-radius: 10px; display: block; }
+.photo .hintx { font-size: 14px; }
+.row { display: flex; gap: 8px; margin-top: 8px; }
+.count { color: var(--faint); font-size: 13px; text-align: right; margin-top: 4px; }
+footer { margin-top: 30px; display: flex; align-items: center; justify-content: space-between; color: var(--faint); font-size: 13px; gap: 8px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #1fae64; margin-right: 6px; vertical-align: 1px; }
+.dot.busy { background: var(--accent); animation: pulse 1s infinite; }
+.dot.err { background: var(--danger); }
+@keyframes pulse { 50% { opacity: .3; } }
+.linkish { border: 0; background: none; color: var(--dim); font-weight: 600; font-size: 13px; padding: 6px; }
+.setup { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; margin-top: 8px; box-shadow: var(--shadow); }
+.setup h2 { margin: 0 0 8px; font-size: 20px; }
+.setup p, .setup li { color: var(--dim); font-size: 15px; }
+.setup a { color: var(--accent); }
+.setup .row input { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; font-size: 14px; }
+.err { color: var(--danger); font-size: 14px; margin-top: 10px; min-height: 1em; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600;
+  opacity: 0; transition: opacity .2s; pointer-events: none; max-width: calc(100% - 32px); }
+.toast.show { opacity: 1; }
+.spin { width: 22px; height: 22px; border: 3px solid var(--card2); border-top-color: var(--accent); border-radius: 50%; animation: rot .8s linear infinite; margin: 40px auto; }
+@keyframes rot { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<main>
+  <!-- connect -->
+  <section id="v-setup" hidden>
+    <header><h1>Recipes</h1></header>
+    <div class="setup">
+      <h2>Connect your recipes</h2>
+      <p>Recipes are kept as private gists on your GitHub account, where your TrimUI Brick reads them. Use the same token as your To-Do list.</p>
+      <ol>
+        <li>If you don't have one yet, <a id="tokenlink" target="_blank" rel="noopener">create a GitHub token</a> with only the <b>gist</b> permission.</li>
+        <li>Paste it below. It's kept only in this browser.</li>
+        <li>On the Brick, Recipes uses the token in To-Do's <b>sync.txt</b>, so there's nothing more to set up there.</li>
+      </ol>
+      <div class="row">
+        <input id="token" class="field" type="password" placeholder="ghp_…" autocomplete="off" spellcheck="false">
+        <button class="btn" id="connect">Connect</button>
+      </div>
+      <div class="err" id="setuperr"></div>
+    </div>
+  </section>
+
+  <!-- list -->
+  <section id="v-list" hidden>
+    <header><h1>Recipes</h1><button class="btn" id="newbtn">New recipe</button></header>
+    <input class="search" id="search" type="search" placeholder="Search recipes" autocomplete="off">
+    <div class="grid" id="grid"></div>
+    <div class="spin" id="listspin" hidden></div>
+    <div class="empty" id="empty" hidden><b>No recipes yet</b>Add one with New recipe.</div>
+    <footer>
+      <span><span class="dot" id="dot"></span><span id="status">Loading…</span></span>
+      <span><button class="linkish" id="refresh">Refresh</button><button class="linkish" id="signout">Disconnect</button></span>
+    </footer>
+  </section>
+
+  <!-- one recipe -->
+  <section id="v-recipe" class="recipe" hidden>
+    <button class="back" data-go="#">‹ Recipes</button>
+    <div id="rbody"></div>
+  </section>
+
+  <!-- editor -->
+  <section id="v-edit" hidden>
+    <button class="back" id="cancel">‹ Cancel</button>
+    <header><h1 id="edtitle">New recipe</h1></header>
+    <label class="lab" for="f-title">Name</label>
+    <input class="field" id="f-title" maxlength="80" placeholder="e.g. Grandma's banana bread" autocomplete="off">
+    <label class="lab">Photo</label>
+    <div class="photo" id="drop" tabindex="0">
+      <div id="ph-empty"><div style="font-size:30px">📷</div><div>Tap to add a photo</div><div class="hintx">or drop one here</div></div>
+      <img id="ph-img" alt="" hidden>
+    </div>
+    <div class="row" id="ph-actions" hidden>
+      <button class="btn quiet" id="ph-change">Change photo</button>
+      <button class="btn danger" id="ph-remove">Remove</button>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <label class="lab" for="f-text">Recipe</label>
+    <textarea class="field" id="f-text" placeholder="Ingredients&#10;- 3 ripe bananas&#10;- 2 cups flour&#10;&#10;Steps&#10;1. Heat the oven to 350°F…"></textarea>
+    <div class="count" id="count"></div>
+    <div class="actions">
+      <span class="grow"></span>
+      <button class="btn" id="save">Save</button>
+    </div>
+    <div class="err" id="saveerr"></div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+// Each recipe is its own secret gist: description "TrimUI Brick Recipe: <name>", with recipe.json
+// ({title, text, updated}) and, if there's a photo, photo.jpg.b64 (a JPEG, base64).
+const PREFIX = "TrimUI Brick Recipe: ";
+const API = localStorage.getItem("todo.api") || "https://api.github.com";
+const MAX_TEXT = 20000;
+const $ = id => document.getElementById(id);
+let token = localStorage.getItem("todo.token") || "";   // shared with the To-Do page
+let recipes = [];            // [{id, title, updated_at}]
+const full = new Map();      // id -> {updated_at, title, text, photo (base64 or "")}
+let editing = null;          // id being edited, or "" for new
+let photoB64 = "";           // the editor's photo
+
+// ---- GitHub -----------------------------------------------------------------------------------------
+async function gh(path, opts = {}) {
+  const r = await fetch(API + path, { cache: "no-store", ...opts, headers: { "Accept": "application/vnd.github+json",
+    "Authorization": "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28", ...(opts.body ? { "Content-Type": "application/json" } : {}) } });
+  if (r.status === 401) throw Object.assign(new Error("GitHub didn't accept the token."), { auth: true });
+  if (r.status === 204) return null;
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    throw Object.assign(new Error(j.message || ("GitHub error " + r.status)), { status: r.status });
+  }
+  return r.json();
+}
+async function listRecipes() {
+  const out = [];
+  for (let page = 1; page <= 10; page++) {
+    const list = await gh(`/gists?per_page=100&page=${page}`);
+    for (const g of list)
+      if (g.description && g.description.startsWith(PREFIX) && g.files && g.files["recipe.json"])
+        out.push({ id: g.id, title: g.description.slice(PREFIX.length), updated_at: g.updated_at });
+    if (list.length < 100) break;
+  }
+  out.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+  return out;
+}
+async function fileText(f) {
+  if (!f) return "";
+  if (!f.truncated) return f.content || "";
+  return await (await fetch(f.raw_url, { cache: "no-store" })).text();
+}
+async function getRecipe(id, updated_at) {
+  const have = full.get(id);
+  if (have && (!updated_at || have.updated_at === updated_at)) return have;
+  const g = await gh("/gists/" + id);
+  let j = {};
+  try { j = JSON.parse(await fileText(g.files["recipe.json"])); } catch (e) {}
+  const r = { id, updated_at: g.updated_at, title: j.title || g.description.slice(PREFIX.length), text: j.text || "",
+    photo: (await fileText(g.files["photo.jpg.b64"])).trim() };
+  full.set(id, r);
+  return r;
+}
+
+// ---- thumbnails (kept in this browser) -------------------------------------------------------------
+function thumbKey(id) { return "recipes.thumb." + id; }
+function cachedThumb(r) {
+  try { const t = JSON.parse(localStorage.getItem(thumbKey(r.id))); if (t && t.u === r.updated_at) return t.d; } catch (e) {}
+  return null;
+}
+async function makeThumb(b64) {
+  if (!b64) return "";
+  const img = new Image(); img.src = "data:image/jpeg;base64," + b64; await img.decode();
+  const w = 320, h = 240, c = document.createElement("canvas"); c.width = w; c.height = h;
+  const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  c.getContext("2d").drawImage(img, (w - img.naturalWidth * s) / 2, (h - img.naturalHeight * s) / 2, img.naturalWidth * s, img.naturalHeight * s);
+  return c.toDataURL("image/jpeg", 0.7);
+}
+async function fillThumbs() {
+  for (const r of recipes) {
+    if (cachedThumb(r) !== null) continue;
+    try {
+      const full = await getRecipe(r.id, r.updated_at);
+      const d = await makeThumb(full.photo);
+      try { localStorage.setItem(thumbKey(r.id), JSON.stringify({ u: r.updated_at, d })); } catch (e) {}
+      const el = document.querySelector(`.tile[data-id="${r.id}"] .ph`);
+      if (el && d) { el.style.backgroundImage = `url(${d})`; el.textContent = ""; }
+    } catch (e) { /* try again next time */ }
+  }
+}
+
+// ---- views ----------------------------------------------------------------------------------------
+function show(v) { for (const s of ["setup", "list", "recipe", "edit"]) $("v-" + s).hidden = s !== v; window.scrollTo(0, 0); }
+function status(kind, text) { $("dot").className = "dot" + (kind === "busy" ? " busy" : kind === "err" ? " err" : ""); $("status").textContent = text; }
+let toastTimer;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400); }
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function drawGrid() {
+  const q = $("search").value.trim().toLowerCase();
+  const shown = recipes.filter(r => !q || r.title.toLowerCase().includes(q));
+  $("grid").replaceChildren(...shown.map(r => {
+    const b = document.createElement("button");
+    b.className = "tile"; b.dataset.id = r.id;
+    const d = cachedThumb(r);
+    b.innerHTML = `<div class="ph"${d ? ` style="background-image:url(${d})"` : ""}>${d ? "" : "🍽️"}</div><div class="t"></div>`;
+    b.querySelector(".t").textContent = r.title;
+    b.onclick = () => { location.hash = "#/r/" + r.id; };
+    return b;
+  }));
+  $("empty").hidden = recipes.length > 0;
+}
+async function refresh() {
+  if (!token) return;
+  status("busy", "Loading…");
+  $("listspin").hidden = recipes.length > 0;
+  try {
+    recipes = await listRecipes();
+    try { localStorage.setItem("recipes.list", JSON.stringify(recipes)); } catch (e) {}
+    drawGrid();
+    status("ok", recipes.length === 1 ? "1 recipe" : `${recipes.length} recipes`);
+    fillThumbs();
+  } catch (e) {
+    if (e.auth) status("err", "Token not accepted");
+    else status("err", navigator.onLine === false ? "Offline" : "Couldn't load: " + e.message);
+  } finally { $("listspin").hidden = true; }
+}
+
+async function openRecipe(id) {
+  show("recipe");
+  $("rbody").innerHTML = '<div class="spin"></div>';
+  try {
+    const meta = recipes.find(r => r.id === id);
+    const r = await getRecipe(id, meta && meta.updated_at);
+    $("rbody").innerHTML = `${r.photo ? `<img class="hero" src="data:image/jpeg;base64,${r.photo}" alt="">` : ""}
+      <h2></h2><div class="meta"></div><div class="body"></div>
+      <div class="actions"><button class="btn quiet" id="r-edit">Edit</button><span class="grow"></span><button class="btn danger" id="r-del">Delete</button></div>`;
+    $("rbody").querySelector("h2").textContent = r.title;
+    $("rbody").querySelector(".meta").textContent = "Updated " + new Date(r.updated_at).toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+    $("rbody").querySelector(".body").textContent = r.text;
+    $("r-edit").onclick = () => { location.hash = "#/edit/" + id; };
+    $("r-del").onclick = () => removeRecipe(r);
+  } catch (e) {
+    $("rbody").innerHTML = `<div class="empty"><b>Couldn't open that recipe</b>${esc(e.message)}</div>`;
+  }
+}
+
+async function removeRecipe(r) {
+  if (!confirm(`Delete "${r.title}"? This removes it from your Brick too.`)) return;
+  try {
+    await gh("/gists/" + r.id, { method: "DELETE" });
+    recipes = recipes.filter(x => x.id !== r.id); full.delete(r.id);
+    try { localStorage.removeItem(thumbKey(r.id)); } catch (e) {}
+    toast("Deleted"); location.hash = "#";
+  } catch (e) { toast("Couldn't delete: " + e.message); }
+}
+
+// ---- editor -------------------------------------------------------------------------------------------
+function setPhoto(b64) {
+  photoB64 = b64 || "";
+  $("ph-img").hidden = !photoB64; $("ph-empty").hidden = !!photoB64; $("ph-actions").hidden = !photoB64;
+  if (photoB64) $("ph-img").src = "data:image/jpeg;base64," + photoB64; else $("ph-img").removeAttribute("src");
+}
+function updateCount() { const n = $("f-text").value.length; $("count").textContent = n > MAX_TEXT * 0.8 ? `${n} / ${MAX_TEXT}` : ""; }
+async function openEditor(id) {
+  editing = id || "";
+  $("saveerr").textContent = ""; $("save").disabled = false;
+  $("edtitle").textContent = id ? "Edit recipe" : "New recipe";
+  show("edit");
+  if (id) {
+    const meta = recipes.find(r => r.id === id);
+    const r = await getRecipe(id, meta && meta.updated_at);
+    $("f-title").value = r.title; $("f-text").value = r.text; setPhoto(r.photo);
+  } else {
+    $("f-title").value = ""; $("f-text").value = ""; setPhoto("");
+    $("f-title").focus();
+  }
+  updateCount();
+}
+// a photo, made to fit the Brick: at most 1024 px on its longest side, as a JPEG
+async function loadPhoto(file) {
+  if (!file) return;
+  try {
+    let src;
+    try { src = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+    catch (e) { const img = new Image(); img.src = URL.createObjectURL(file); await img.decode(); src = img; }
+    const w0 = src.width || src.naturalWidth, h0 = src.height || src.naturalHeight;
+    const s = Math.min(1, 1024 / Math.max(w0, h0));
+    const c = document.createElement("canvas"); c.width = Math.round(w0 * s); c.height = Math.round(h0 * s);
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(src, 0, 0, c.width, c.height);
+    setPhoto(c.toDataURL("image/jpeg", 0.82).split(",")[1]);
+  } catch (e) {
+    toast("That photo couldn't be opened. Try a JPEG or PNG.");
+  }
+}
+async function save() {
+  const title = $("f-title").value.replace(/\s+/g, " ").trim(), text = $("f-text").value.replace(/\r\n/g, "\n").replace(/\s+$/, "");
+  if (!title) { $("saveerr").textContent = "Give the recipe a name."; $("f-title").focus(); return; }
+  if (!text) { $("saveerr").textContent = "Type out the recipe."; $("f-text").focus(); return; }
+  if (text.length > MAX_TEXT) { $("saveerr").textContent = "That recipe is too long."; return; }
+  $("save").disabled = true; $("saveerr").textContent = "";
+  const files = { "recipe.json": { content: JSON.stringify({ app: "brick-recipe", v: 1, title, text, updated: Date.now() }) } };
+  if (photoB64) files["photo.jpg.b64"] = { content: photoB64 };
+  try {
+    let g;
+    if (editing) {
+      const old = full.get(editing);
+      if (!photoB64 && old && old.photo) files["photo.jpg.b64"] = null; // removed
+      g = await gh("/gists/" + editing, { method: "PATCH", body: JSON.stringify({ description: PREFIX + title, files }) });
+    } else {
+      g = await gh("/gists", { method: "POST", body: JSON.stringify({ description: PREFIX + title, public: false, files }) });
+    }
+    full.set(g.id, { id: g.id, updated_at: g.updated_at, title, text, photo: photoB64 });
+    const i = recipes.findIndex(r => r.id === g.id), entry = { id: g.id, title, updated_at: g.updated_at };
+    if (i >= 0) recipes[i] = entry; else recipes.push(entry);
+    recipes.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+    try { localStorage.setItem(thumbKey(g.id), JSON.stringify({ u: g.updated_at, d: await makeThumb(photoB64) })); } catch (e) {}
+    toast("Saved. Your Brick gets it next time Recipes opens.");
+    location.hash = "#/r/" + g.id;
+  } catch (e) {
+    $("saveerr").textContent = e.auth ? "GitHub didn't accept the token." : "Couldn't save: " + e.message;
+    $("save").disabled = false;
+  }
+}
+
+// ---- wiring ----------------------------------------------------------------------------------------------
+function route() {
+  if (!token) { show("setup"); return; }
+  const h = location.hash;
+  let m;
+  if ((m = h.match(/^#\/r\/(\w+)/))) openRecipe(m[1]);
+  else if (h === "#/new") openEditor("");
+  else if ((m = h.match(/^#\/edit\/(\w+)/))) openEditor(m[1]);
+  else { show("list"); drawGrid(); }
+}
+window.addEventListener("hashchange", route);
+$("tokenlink").href = "https://github.com/settings/tokens/new?scopes=gist&description=" + encodeURIComponent("TrimUI Brick");
+$("connect").onclick = async () => {
+  const v = $("token").value.trim(); if (!v) return;
+  token = v; $("setuperr").textContent = ""; $("connect").disabled = true;
+  try { await gh("/gists?per_page=1"); localStorage.setItem("todo.token", token); route(); refresh(); }
+  catch (e) { token = ""; $("setuperr").textContent = e.auth ? "GitHub didn't accept that token." : "Couldn't reach GitHub: " + e.message; }
+  finally { $("connect").disabled = false; }
+};
+$("signout").onclick = () => {
+  if (!confirm("Disconnect this browser? This also disconnects the To-Do page here. Your recipes stay on GitHub and your Brick.")) return;
+  localStorage.removeItem("todo.token"); localStorage.removeItem("todo.gist"); token = ""; route();
+};
+$("refresh").onclick = refresh;
+$("newbtn").onclick = () => { location.hash = "#/new"; };
+$("search").oninput = drawGrid;
+$("cancel").onclick = () => history.length > 1 ? history.back() : (location.hash = "#");
+document.querySelector("[data-go]").onclick = () => { location.hash = "#"; };
+$("drop").onclick = () => $("file").click();
+$("drop").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } };
+$("ph-change").onclick = () => $("file").click();
+$("ph-remove").onclick = () => setPhoto("");
+$("file").onchange = () => { loadPhoto($("file").files[0]); $("file").value = ""; };
+$("drop").ondragover = e => { e.preventDefault(); $("drop").classList.add("over"); };
+$("drop").ondragleave = () => $("drop").classList.remove("over");
+$("drop").ondrop = e => { e.preventDefault(); $("drop").classList.remove("over"); loadPhoto(e.dataTransfer.files[0]); };
+$("f-text").oninput = updateCount;
+$("save").onclick = save;
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("v-list").hidden) refresh(); });
+
+try { recipes = JSON.parse(localStorage.getItem("recipes.list")) || []; } catch (e) { recipes = []; }
+route();
+if (token) refresh();
+</script>
+</body>
+</html>
